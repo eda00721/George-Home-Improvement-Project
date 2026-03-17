@@ -175,14 +175,17 @@ with button_col2:
         st.success("Dashboard saved.")
 
 with button_col3:
-    excel_bytes = build_excel(st.session_state.dashboard_df)
-    st.download_button(
-        "Download Excel",
-        data=excel_bytes,
-        file_name="home_resale_dashboard_data.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        use_container_width=True,
-    )
+    try:
+        excel_bytes = build_excel(st.session_state.dashboard_df)
+        st.download_button(
+            "Download Excel",
+            data=excel_bytes,
+            file_name="home_resale_dashboard_data.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            use_container_width=True,
+        )
+    except Exception as e:
+        st.warning(f"Excel export unavailable: {e}")
 
 with button_col4:
     if st.button("Reset to Default", use_container_width=True):
