@@ -88,27 +88,48 @@ def build_excel(df: pd.DataFrame) -> bytes:
     output = BytesIO()
     export_df = df.copy()
 
-    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
         export_df.to_excel(writer, index=False, sheet_name="Dashboard")
-        ws = writer.book["Dashboard"]
 
-        for cell in ws[1]:
-            cell.font = cell.font.copy(bold=True)
+        workbook = writer.book
+        worksheet = writer.sheets["Dashboard"]
 
-        widths = {
-            "A": 24,
-            "B": 40,
-            "C": 16,
-            "D": 16,
-            "E": 16,
-            "F": 40,
-        }
-        for col_letter, width in widths.items():
-            ws.column_dimensions[col_letter].width = width
+        # Formats
+        header_format = workbook.add_format({
+            "bold": True,
+            "border": 1,
+            "text_wrap": True,
+            "valign": "top"
+        })
+
+        cell_format = workbook.add_format({
+            "border": 1,
+            "text_wrap": True,
+            "valign": "top"
+        })
+
+        money_format = workbook.add_format({
+            "border": 1,
+            "num_format": "$#,##0.00",
+            "valign": "top"
+        })
+
+        # Apply header format
+        for col_num, value in enumerate(export_df.columns.values):
+            worksheet.write(0, col_num, value, header_format)
+
+        # Set column widths + formats
+        worksheet.set_column("A:A", 24, cell_format)   # Objective
+        worksheet.set_column("B:B", 40, cell_format)   # Description
+        worksheet.set_column("C:C", 16, cell_format)   # Status
+        worksheet.set_column("D:E", 16, money_format)  # Costs
+        worksheet.set_column("F:F", 40, cell_format)   # Notes
+
+        # Freeze header row
+        worksheet.freeze_panes(1, 0)
 
     output.seek(0)
     return output.getvalue()
-
 
 def blank_row() -> dict:
     return {
